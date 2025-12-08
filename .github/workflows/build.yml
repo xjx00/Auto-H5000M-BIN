@@ -144,6 +144,21 @@ jobs:
             sed -i 's/+kmod-mhi-wwan/+PACKAGE_luci-app-qmodem_GENERIC_MHI_PCIe_DRIVER:kmod-mhi-wwan/g' "$QMODEM_MK" || true
           fi
           
+          # 4. 修复 AdGuardHome 安装冲突
+          # 情况：AdGuardHome 下载脚本试图将文件移动到 /usr/bin/AdGuardHome，但路径冲突
+          # 解决：修改 AdGuardHome 包的安装脚本，清理并正确创建目录
+          AGH_INIT="package/feeds/packages/adguardhome/files/etc/init.d/AdGuardHome"
+          if [ -f "$AGH_INIT" ]; then
+            # 添加清理和重建逻辑到初始化脚本
+            sed -i '/^#!/a\
+          # 清理冲突的 /usr/bin/AdGuardHome 路径\
+          [ -e /usr/bin/AdGuardHome ] && rm -rf /usr/bin/AdGuardHome\
+          mkdir -p /usr/bin/AdGuardHome' "$AGH_INIT" || true
+          fi
+          
+          # 同时移除包中的冲突文件定义
+          rm -rf package/feeds/packages/adguardhome/files/usr/bin/AdGuardHome 2>/dev/null || true
+          
           echo "依赖修复完成"
 
       - name: Create Modem WebUI package
