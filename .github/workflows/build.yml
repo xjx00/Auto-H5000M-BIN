@@ -374,10 +374,14 @@ jobs:
           for i in 1 2 3; do make download -j16 && break; find dl -size -1024c -delete 2>/dev/null; sleep 3; done
           
           # ======== 增量编译优化 ========
-          # 如果 toolchain 已缓存，跳过 toolchain 编译
-          if [ -d "staging_dir/toolchain-aarch64_cortex-a53_gcc-13.3.0_musl" ]; then
-            echo "✅ Toolchain 缓存命中，跳过 toolchain 编译"
-            touch staging_dir/toolchain-*/stamp/.toolchain_*
+          # 如果 toolchain 已缓存，尝试跳过 toolchain 编译
+          TOOLCHAIN_DIR=$(find staging_dir -maxdepth 1 -type d -name "toolchain-*" 2>/dev/null | head -1)
+          if [ -n "$TOOLCHAIN_DIR" ] && [ -d "$TOOLCHAIN_DIR" ]; then
+            echo "✅ Toolchain 缓存命中: $TOOLCHAIN_DIR"
+            # 安全地 touch stamp 文件（如果存在）
+            find "$TOOLCHAIN_DIR/stamp" -name ".toolchain_*" -exec touch {} \; 2>/dev/null || true
+          else
+            echo "ℹ️ Toolchain 缓存未命中，将完整编译"
           fi
           
           # 编译（使用更多线程）
