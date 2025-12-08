@@ -132,7 +132,8 @@ jobs:
           rm -rf package/feeds/packages/python-zope-event 2>/dev/null || true
           rm -rf package/feeds/packages/python-zope-interface 2>/dev/null || true
           
-          # 2. 使用 packages feed 的 ndisc6（QModem 的版本太旧 1.0.2，可能编译失败）
+          # 2. ndisc6 处理：优先使用源码自带版本，移除 QModem feed 中的重复版本避免冲突
+          # padavanonly 源码在 package/mtk/applications/5g-modem/ndisc 已包含 ndisc6
           rm -rf package/feeds/qmodem/ndisc6 2>/dev/null || true
           
           # 3. 修复 kmod-mhi-wwan 依赖 - 修改 qmodem Makefile 移除该依赖
