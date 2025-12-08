@@ -172,8 +172,14 @@ jobs:
           rm -rf package/feeds/packages/python-gevent 2>/dev/null || true
           rm -rf package/feeds/packages/python-twisted 2>/dev/null || true
           
-          # 4. 移除 kmod-mt_wifi_osal 问题包
-          rm -rf package/mtk/drivers/mt_hwifi 2>/dev/null || true
+          # 4. 修复 mt_hwifi 驱动的 kmod-mt_wifi_osal 依赖警告
+          # 注意：不能删除 mt_hwifi，否则 WiFi 无法工作！
+          # 只需忽略这个警告，或者修复 Makefile 中的依赖
+          MT_HWIFI_MK="package/mtk/drivers/mt_hwifi/Makefile"
+          if [ -f "$MT_HWIFI_MK" ]; then
+            # 移除或注释掉不存在的 kmod-mt_wifi_osal 依赖
+            sed -i 's/+kmod-mt_wifi_osal//g' "$MT_HWIFI_MK" || true
+          fi
           
           # 5. 修复 AdGuardHome 安装冲突
           # 情况：AdGuardHome 下载脚本试图将文件移动到 /usr/bin/AdGuardHome，但路径冲突
