@@ -132,7 +132,10 @@ jobs:
           rm -rf package/feeds/packages/python-zope-event 2>/dev/null || true
           rm -rf package/feeds/packages/python-zope-interface 2>/dev/null || true
           
-          # 2. 修复 kmod-mhi-wwan 依赖 - 修改 qmodem Makefile 移除该依赖
+          # 2. 使用 QModem feed 中的 ndisc6（移除 packages feed 中的版本避免冲突）
+          rm -rf package/feeds/packages/ndisc6 2>/dev/null || true
+          
+          # 3. 修复 kmod-mhi-wwan 依赖 - 修改 qmodem Makefile 移除该依赖
           # qmodem 包默认使用 vendor 驱动 (pcie_mhi)，不需要 generic mhi-wwan
           QMODEM_MK="package/feeds/qmodem/qmodem/Makefile"
           if [ -f "$QMODEM_MK" ]; then
