@@ -1,0 +1,118 @@
+name: OpenWrt Matrix Build
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 16 * * 0'
+
+permissions:
+  contents: write
+
+jobs:
+  feeds:
+    runs-on: ubuntu-22.04
+    outputs:
+      feeds_cache_key: ${{ steps.cache-feeds.outputs.cache-primary-key }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Use custom feeds.conf.default
+        run: cp openwrt-extra-feeds.conf feeds.conf.default
+      - name: Cache feeds
+        id: cache-feeds
+        uses: actions/cache@v4
+        with:
+          path: |
+            feeds
+            feeds.conf.default
+          key: ${{ runner.os }}-feeds-${{ hashFiles('feeds.conf.default') }}
+      - name: Update feeds
+        run: |
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+
+  toolchain:
+    needs: feeds
+    runs-on: ubuntu-22.04
+    outputs:
+      toolchain_cache_key: ${{ steps.cache-toolchain.outputs.cache-primary-key }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Restore feeds cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            feeds
+            feeds.conf.default
+          key: ${{ needs.feeds.outputs.feeds_cache_key }}
+      - name: Cache toolchain
+        id: cache-toolchain
+        uses: actions/cache@v4
+        with:
+          path: staging_dir/toolchain-*
+          key: ${{ runner.os }}-toolchain-${{ hashFiles('feeds.conf.default') }}
+      - name: Build toolchain
+        run: |
+          make toolchain/install -j$(nproc)
+
+  build:
+    needs: toolchain
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Restore feeds cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            feeds
+            feeds.conf.default
+          key: ${{ needs.feeds.outputs.feeds_cache_key }}
+      - name: Restore toolchain cache
+        uses: actions/cache@v4
+        with:
+          path: staging_dir/toolchain-*
+          key: ${{ needs.toolchain.outputs.toolchain_cache_key }}
+      - name: Cache build_dir
+        uses: actions/cache@v4
+        with:
+          path: build_dir
+          key: ${{ runner.os }}-builddir-${{ github.run_id }}
+      - name: Append custom packages config
+        run: |
+          cat openwrt-extra-packages.config >> .config
+          make defconfig
+      - name: Build firmware
+        run: |
+          make -j$(nproc)
+      - name: Upload firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware
+          path: bin/targets
+
+  ipk:
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Restore build_dir cache
+        uses: actions/cache@v4
+        with:
+          path: build_dir
+          key: ${{ runner.os }}-builddir-${{ github.run_id }}
+      - name: Upload ipk
+        uses: actions/upload-artifact@v4
+        with:
+          name: ipk
+          path: bin/packages
