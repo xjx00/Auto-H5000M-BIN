@@ -18,7 +18,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
-      # 直接使用 feeds.conf.default，无需 cp 操作
       - name: Clone source
         run: |
           if [ ! -d immortalwrt/.git ]; then
@@ -28,7 +27,9 @@ jobs:
         id: cache-feeds
         uses: actions/cache@v4
         with:
-          path: immortalwrt/feeds
+          path: |
+            immortalwrt/feeds
+            feeds.conf.default
           key: ${{ runner.os }}-feeds-${{ github.run_id }}-${{ hashFiles('feeds.conf.default') }}
       - name: Update feeds
         run: |
@@ -51,7 +52,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            feeds
+            immortalwrt/feeds
             feeds.conf.default
           key: ${{ needs.feeds.outputs.feeds_cache_key }}
       - name: Cache toolchain
@@ -76,7 +77,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            feeds
+            immortalwrt/feeds
             feeds.conf.default
           key: ${{ needs.feeds.outputs.feeds_cache_key }}
       - name: Restore toolchain cache
