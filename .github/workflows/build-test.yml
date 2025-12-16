@@ -213,16 +213,8 @@ jobs:
         if: success()
         run: |
           mkdir -p artifacts
-          
           # 复制所有固件文件
-          find $SOURCE_DIR/bin/targets -type f \( \
-            -name "*.bin" -o \
-            -name "*.img*" -o \
-            -name "*.tar" -o \
-            -name "*.gz" -o \
-            -name "*.zip" \
-          \) -exec cp {} artifacts/ \;
-          
+          find $SOURCE_DIR/bin/targets -type f \( -name "*.bin" -o -name "*.img.gz" \) -exec cp {} artifacts/ \;
           echo "📦 生成的文件:"
           ls -lh artifacts/
 
