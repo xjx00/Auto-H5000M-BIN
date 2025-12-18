@@ -180,10 +180,21 @@ jobs:
           fi
           if [ "${{ inputs.enable_openclash }}" = "true" ]; then
             echo "CONFIG_PACKAGE_luci-app-openclash=y" >> .config
+            echo "CONFIG_PACKAGE_bash=y" >> .config
+            echo "CONFIG_PACKAGE_dnsmasq-full=y" >> .config
+            echo "CONFIG_PACKAGE_curl=y" >> .config
+            echo "CONFIG_PACKAGE_ca-bundle=y" >> .config
+            echo "CONFIG_PACKAGE_ip-full=y" >> .config
             echo "CONFIG_PACKAGE_ruby=y" >> .config
             echo "CONFIG_PACKAGE_ruby-yaml=y" >> .config
-            echo "CONFIG_PACKAGE_libyaml=y" >> .config
-            echo "启用 OpenClash"
+            echo "CONFIG_PACKAGE_kmod-tun=y" >> .config
+            echo "CONFIG_PACKAGE_kmod-inet-diag=y" >> .config
+            echo "CONFIG_PACKAGE_unzip=y" >> .config
+            echo "CONFIG_PACKAGE_kmod-nft-tproxy=y" >> .config
+            echo "CONFIG_PACKAGE_luci-compat=y" >> .config
+            echo "CONFIG_PACKAGE_luci=y" >> .config
+            echo "CONFIG_PACKAGE_luci-base=y" >> .config
+            echo "启用 OpenClash (仅nftables)"
           fi
           if [ "${{ inputs.enable_mihomo }}" = "true" ]; then
             echo "CONFIG_PACKAGE_nikki=y" >> .config
