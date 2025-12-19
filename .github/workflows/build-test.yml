@@ -227,6 +227,10 @@ jobs:
 
           cat base.config > .config
 
+          # 确保禁用冲突的modem包
+          sed -i 's/^CONFIG_PACKAGE_luci-app-modem=y/# CONFIG_PACKAGE_luci-app-modem is not set/' .config
+          sed -i 's/^CONFIG_PACKAGE_modem=y/# CONFIG_PACKAGE_modem is not set/' .config
+
           # 应用额外配置
           if [ -f "$GITHUB_WORKSPACE/h5000m.extra.config" ]; then
             cat "$GITHUB_WORKSPACE/h5000m.extra.config" >> .config
@@ -639,6 +643,10 @@ jobs:
           }
 
           cat base.config > .config
+
+          # 确保禁用冲突的modem包
+          sed -i 's/^CONFIG_PACKAGE_luci-app-modem=y/# CONFIG_PACKAGE_luci-app-modem is not set/' .config
+          sed -i 's/^CONFIG_PACKAGE_modem=y/# CONFIG_PACKAGE_modem is not set/' .config
 
           # 应用额外配置
           if [ -f "$GITHUB_WORKSPACE/h5000m.extra.config" ]; then
