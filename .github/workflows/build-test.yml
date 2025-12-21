@@ -16,9 +16,9 @@ on:
         default: false
         type: boolean
       enable_mihomo:
-        description: '启用 Mihomo'
+        description: '启用 Nikki'
         required: false
-        default: false
+        default: true
         type: boolean
       enable_upnp:
         description: '启用 UPnP'
@@ -59,7 +59,7 @@ on:
       enable_homeproxy:
         description: '启用 HomeProxy'
         required: false
-        default: false
+        default: true
         type: boolean
 
 permissions:
@@ -166,8 +166,8 @@ jobs:
           fi
 
           # 根据输入动态添加 feeds
-          if [ "${{ steps.set-env.outputs.enable_mihomo }}" = "true" ] && ! grep -q "mihomo" feeds.conf.default; then
-            echo 'src-git mihomo https://github.com/morytyann/OpenWrt-mihomo.git;main' >> feeds.conf.default
+          if [ "${{ steps.set-env.outputs.enable_mihomo }}" = "true" ] && ! grep -q "nikki" feeds.conf.default; then
+            echo 'src-git nikki https://github.com/nikkinikki-org/OpenWrt-nikki.git;main' >> feeds.conf.default
           fi
           if [ "${{ steps.set-env.outputs.enable_qmodem_next }}" = "true" ] || [ "${{ steps.set-env.outputs.enable_qmodem }}" = "true" ]; then
             if ! grep -q "qmodem" feeds.conf.default; then
@@ -309,8 +309,8 @@ jobs:
 
           # Mihomo
           [ "${{ steps.set-env.outputs.enable_mihomo }}" = "true" ] && {
-            enable_pkg "mihomo"
-            enable_pkg "luci-app-mihomo"
+            enable_pkg "nikki"
+            enable_pkg "luci-app-nikki"
           }
 
           # 其他包
@@ -494,7 +494,7 @@ jobs:
           ⚙️ 启用的功能:
           • AdGuardHome:   ${{ needs.prepare.outputs.enable_adguardhome }}
           • OpenClash:     ${{ needs.prepare.outputs.enable_openclash }}
-          • Mihomo:        ${{ needs.prepare.outputs.enable_mihomo }}
+          • Nikki:        ${{ needs.prepare.outputs.enable_mihomo }}
           • UPnP:          ${{ needs.prepare.outputs.enable_upnp }}
           • VLMCSd:        ${{ needs.prepare.outputs.enable_vlmcsd }}
           • MosDNS:        ${{ needs.prepare.outputs.enable_mosdns }}
@@ -533,7 +533,7 @@ jobs:
             **⚙️ 启用的功能:**
             - AdGuardHome: ${{ needs.prepare.outputs.enable_adguardhome }}
             - OpenClash: ${{ needs.prepare.outputs.enable_openclash }}
-            - Mihomo: ${{ needs.prepare.outputs.enable_mihomo }}
+            - Nikki: ${{ needs.prepare.outputs.enable_mihomo }}
             - UPnP: ${{ needs.prepare.outputs.enable_upnp }}
             - VLMCSd: ${{ needs.prepare.outputs.enable_vlmcsd }}
             - MosDNS: ${{ needs.prepare.outputs.enable_mosdns }}
