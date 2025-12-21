@@ -203,8 +203,8 @@ jobs:
 
           # 更新 feeds
           echo "🔄 更新 feeds..."
-          ./scripts/feeds update -a -j$(nproc)
-          ./scripts/feeds install -a -f -j$(nproc)
+          ./scripts/feeds update -a -j $(nproc)
+          ./scripts/feeds install -a -f -j $(nproc)
 
       - name: 修复依赖和补丁
         run: |
