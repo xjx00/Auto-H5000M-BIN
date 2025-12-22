@@ -202,6 +202,7 @@ jobs:
             fi
           else
             sed -i '/nikki/d' feeds.conf.default
+            rm -rf feeds/nikki 2>/dev/null || true
           fi
           
           # QModem feed
@@ -211,6 +212,7 @@ jobs:
             fi
           else
             sed -i '/qmodem/d' feeds.conf.default
+            rm -rf feeds/qmodem 2>/dev/null || true
           fi
           
           # HomeProxy feed
@@ -220,6 +222,7 @@ jobs:
             fi
           else
             sed -i '/homeproxy/d' feeds.conf.default
+            rm -rf feeds/homeproxy 2>/dev/null || true
           fi
           
           # Adbyby Plus feed
@@ -229,6 +232,7 @@ jobs:
             fi
           else
             sed -i '/coolsnowwolf_luci/d' feeds.conf.default
+            rm -rf feeds/coolsnowwolf_luci 2>/dev/null || true
           fi
 
           # 更新 feeds
