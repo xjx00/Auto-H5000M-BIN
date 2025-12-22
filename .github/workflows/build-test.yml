@@ -161,8 +161,9 @@ jobs:
       - name: 源码和依赖准备
         run: |
           # 检查并准备源码
-          if [ ! -d "$SOURCE_DIR" ]; then
+          if [ ! -d "$SOURCE_DIR" ] || [ ! -d "$SOURCE_DIR/.git" ]; then
             echo "📥 克隆源码..."
+            rm -rf "$SOURCE_DIR" 2>/dev/null || true
             git clone -b $REPO_BRANCH --single-branch --depth=1 $REPO_URL $SOURCE_DIR
           else
             echo "🔄 检查源码更新..."
