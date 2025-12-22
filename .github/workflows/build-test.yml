@@ -55,18 +55,20 @@ on:
         required: false
         default: false
         type: boolean
-
       enable_homeproxy:
         description: '启用 HomeProxy'
         required: false
         default: false
         type: boolean
-
       enable_adbyby_plus:
         description: '启用 Adbyby Plus'
         required: false
         default: false
         type: boolean
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -133,12 +135,10 @@ jobs:
             libncurses5-dev libssl-dev libgmp3-dev libmbedtls-dev rustc cargo \
             golang-go autoconf automake libtool patch make gcc g++
 
-      - name: 设置 ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          key: ${{ env.REPO_BRANCH }}
-          max-size: 8G
-          save: true
+          # 设置 ccache
+          echo "📦 设置 ccache..."
+          export PATH="/usr/lib/ccache:$PATH"
+          ccache --version || true
 
       - name: 恢复构建缓存
         uses: actions/cache@v4
@@ -444,7 +444,7 @@ jobs:
         run: |
           cd $SOURCE_DIR
           echo "📥 预下载构建依赖..."
-          THREADS=4
+          THREADS=$(nproc)
           if [ -z "$(ls -A dl 2>/dev/null)" ]; then
             make download -j$THREADS || echo "⚠️ 下载失败，将在构建时重试"
           else
@@ -455,7 +455,7 @@ jobs:
         run: |
           cd $SOURCE_DIR
           echo "🔧 预构建工具链..."
-          THREADS=4
+          THREADS=$(nproc)
           if [ ! -d "staging_dir" ] || [ -z "$(ls -A staging_dir 2>/dev/null)" ]; then
             make toolchain/install -j$THREADS || echo "⚠️ 工具链构建失败，将在构建时重试"
           else
@@ -518,7 +518,7 @@ jobs:
       - name: 编译固件
         run: |
           cd $SOURCE_DIR
-          THREADS=4  # 固定线程数以提高效率
+          THREADS=$(nproc)  # 使用所有可用核心以提高效率
           export PATH="/usr/lib/ccache:$PATH"
           
           echo "🔨 开始编译 (${THREADS} 线程)..."
@@ -559,6 +559,17 @@ jobs:
           find bin/targets -type f \( -name "*.bin" -o -name "*.img.gz" \) -exec cp {} ../artifacts/ \;
           cd ..
           tar -czf artifacts.tar.gz artifacts/
+
+      - name: 验证产物
+        run: |
+          echo "🔍 验证产物..."
+          if [ -z "$(ls -A artifacts/ 2>/dev/null)" ]; then
+            echo "❌ 没有找到产物文件"
+            exit 1
+          else
+            echo "✅ 产物验证通过"
+            ls -lh artifacts/
+          fi
 
       - name: 上传产物
         uses: actions/upload-artifact@v4
