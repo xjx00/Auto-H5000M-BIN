@@ -202,20 +202,15 @@ jobs:
             cp "$GITHUB_WORKSPACE/feeds.conf.default" ./feeds.conf.default
           fi
 
-          # feeds.conf.default 和 feeds 目录/索引彻底同步，彻底避免 nikki 报错
-          rm -rf feeds/nikki feeds/nikki.* feeds/nikki* feeds/nikki.index 2>/dev/null || true
-
-          # 动态管理 feeds.conf.default
-          if [ "${{ steps.set-env.outputs.enable_nikki }}" = "true" ]; then
-            :
-          else
+          # 动态管理 feeds.conf.default (必须在清理和更新之前完成)
+          if [ "${{ steps.set-env.outputs.enable_nikki }}" != "true" ]; then
+            echo "🔧 禁用 nikki feed..."
             sed -i '/src-git nikki/d' feeds.conf.default
           fi
 
           # QModem feed
-          if [ "${{ steps.set-env.outputs.enable_qmodem_next }}" = "true" ] || [ "${{ steps.set-env.outputs.enable_qmodem }}" = "true" ]; then
-            :
-          else
+          if [ "${{ steps.set-env.outputs.enable_qmodem_next }}" != "true" ] && [ "${{ steps.set-env.outputs.enable_qmodem }}" != "true" ]; then
+            echo "🔧 禁用 qmodem feed..."
             sed -i '/qmodem/d' feeds.conf.default
           fi
 
@@ -227,6 +222,21 @@ jobs:
           else
             sed -i '/coolsnowwolf_luci/d' feeds.conf.default
           fi
+
+          # 彻底清理不需要的 feeds 目录和索引 (在修改 feeds.conf.default 之后)
+          echo "🧹 清理旧的 feeds 缓存..."
+          if [ "${{ steps.set-env.outputs.enable_nikki }}" != "true" ]; then
+            rm -rf feeds/nikki feeds/nikki.index feeds/nikki.tmp 2>/dev/null || true
+          fi
+          if [ "${{ steps.set-env.outputs.enable_qmodem_next }}" != "true" ] && [ "${{ steps.set-env.outputs.enable_qmodem }}" != "true" ]; then
+            rm -rf feeds/qmodem feeds/qmodem.index feeds/qmodem.tmp 2>/dev/null || true
+          fi
+          if [ "${{ steps.set-env.outputs.enable_adbyby_plus }}" != "true" ]; then
+            rm -rf feeds/coolsnowwolf_luci feeds/coolsnowwolf_luci.index feeds/coolsnowwolf_luci.tmp 2>/dev/null || true
+          fi
+          
+          # 清理可能残留的全局索引缓存
+          rm -rf tmp/.packageinfo tmp/.targetinfo 2>/dev/null || true
 
           # feeds update/install
           echo "🔄 更新 feeds..."
@@ -275,10 +285,12 @@ jobs:
           fix_qmi_driver "package/mtk/applications/5g-modem/simcom_QMI_WWAN/qmi_wwan_s.c"
           fix_qmi_driver "package/mtk/applications/5g-modem/simcom_QMI_WWAN/src/qmi_wwan_s.c"
           
-          # 修复 feeds 中的 QModem 驱动 (如果存在)
-          for driver_file in $(find feeds/qmodem -name "*.c" -type f 2>/dev/null | xargs grep -l "u64_stats_fetch_begin_irq\|memcpy.*dev_addr" 2>/dev/null || true); do
-            fix_qmi_driver "$driver_file"
-          done
+          # 修复 feeds 中的 QModem 驱动 (如果存在且已启用)
+          if [ -d "feeds/qmodem" ]; then
+            for driver_file in $(find feeds/qmodem -name "*.c" -type f 2>/dev/null | xargs grep -l "u64_stats_fetch_begin_irq\|memcpy.*dev_addr" 2>/dev/null || true); do
+              fix_qmi_driver "$driver_file"
+            done
+          fi
           
           # 下载额外包
           if [ "${{ steps.set-env.outputs.enable_adguardhome }}" = "true" ]; then
@@ -314,11 +326,14 @@ jobs:
           
           rm -rf package/feeds/packages/{exim,onionshare-cli,python-zope-event,python-zope-interface,python-gevent,python-twisted} 2>/dev/null || true
 
-          rm -rf package/feeds/qmodem/ndisc6 2>/dev/null || true
+          # QModem 相关修复 (仅当 qmodem feed 存在时)
+          if [ -d "package/feeds/qmodem" ]; then
+            rm -rf package/feeds/qmodem/ndisc6 2>/dev/null || true
 
-          QMODEM_MK="package/feeds/qmodem/qmodem/Makefile"
-          if [ -f "$QMODEM_MK" ]; then
-            sed -i 's/DEPENDS:=.*+kmod-mhi-wwan/# &/g' "$QMODEM_MK" || true
+            QMODEM_MK="package/feeds/qmodem/qmodem/Makefile"
+            if [ -f "$QMODEM_MK" ]; then
+              sed -i 's/DEPENDS:=.*+kmod-mhi-wwan/# &/g' "$QMODEM_MK" || true
+            fi
           fi
 
           MT_HWIFI_MK="package/mtk/drivers/mt_hwifi/Makefile"
