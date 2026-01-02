@@ -301,14 +301,16 @@ jobs:
             fi
           fi
 
-          # Adbyby Plus Lite 安装 (仓库有子目录结构)
+          # Adbyby Plus Lite 安装 (仓库结构: luci-app-adbyby-plus 子目录)
           if [ "${{ steps.set-env.outputs.enable_adbyby_plus }}" = "true" ]; then
             echo "🔧 安装 Adbyby Plus Lite..."
             if [ ! -d "package/luci-app-adbyby-plus" ]; then
-              git clone --depth=1 https://github.com/kongfl888/luci-app-adbyby-plus-lite.git /tmp/adbyby-plus-lite
+              git clone --depth=1 --recurse-submodules https://github.com/kongfl888/luci-app-adbyby-plus-lite.git /tmp/adbyby-plus-lite
               cp -r /tmp/adbyby-plus-lite/luci-app-adbyby-plus package/luci-app-adbyby-plus
               rm -rf /tmp/adbyby-plus-lite
             fi
+            # 确保依赖包存在 (ipset 用于 Plus+ 模式)
+            echo "CONFIG_PACKAGE_ipset=y" >> .config 2>/dev/null || true
             echo "✅ Adbyby Plus Lite 安装完成"
           fi
 
@@ -410,6 +412,11 @@ jobs:
               elif [ "$pkg" = "adguardhome" ]; then
                 echo "CONFIG_PACKAGE_luci-app-$pkg=y" >> .config
                 echo "CONFIG_PACKAGE_luci-i18n-$pkg-zh-cn=y" >> .config
+              elif [ "$pkg" = "adbyby-plus" ]; then
+                # adbyby-plus 及其依赖 (Plus+ 模式需要 ipset)
+                echo "CONFIG_PACKAGE_luci-app-adbyby-plus=y" >> .config
+                echo "CONFIG_PACKAGE_luci-i18n-adbyby-plus-zh-cn=y" >> .config
+                echo "CONFIG_PACKAGE_ipset=y" >> .config
               else
                 echo "CONFIG_PACKAGE_luci-app-$pkg=y" >> .config
               fi
