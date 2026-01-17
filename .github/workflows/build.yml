@@ -1,8 +1,6 @@
 name: Build ImmortalWrt MT798x
 
 on:
-  schedule:
-    - cron: '0 16 * * 0'  # 每周一北京时间 0:00
   workflow_dispatch:
 
 # 添加权限声明，允许创建 Release
@@ -215,7 +213,7 @@ jobs:
           # ======== QModem 核心 ========
           CONFIG_PACKAGE_luci-compat=y
           CONFIG_PACKAGE_qmodem=y
-          CONFIG_PACKAGE_luci-app-qmodem=y
+          CONFIG_PACKAGE_luci-app-qmodem-next=y
           
           # QModem 驱动选择 - 使用 Vendor 驱动
           CONFIG_PACKAGE_luci-app-qmodem_INCLUDE_vendor-qmi-wwan=y
@@ -237,6 +235,8 @@ jobs:
           CONFIG_PACKAGE_sms-tool_q=y
           CONFIG_PACKAGE_ubus-at-daemon=y
           CONFIG_PACKAGE_tom_modem=y
+          CONFIG_PACKAGE_sms-forwarder-next=y
+          CONFIG_PACKAGE_luci-i18n-qmodem-next-zh-cn=y
           
           # QModem Vendor QMI 驱动
           CONFIG_PACKAGE_kmod-qmi_wwan_q=y
@@ -244,7 +244,7 @@ jobs:
           CONFIG_PACKAGE_kmod-qmi_wwan_s=y
           
           # QModem MWAN (多WAN负载均衡)
-          CONFIG_PACKAGE_luci-app-qmodem-mwan=y
+          #CONFIG_PACKAGE_luci-app-qmodem-mwan=y
           CONFIG_PACKAGE_mwan3=y
           CONFIG_PACKAGE_luci-app-mwan3=y
           # HQOS 支持
@@ -304,7 +304,7 @@ jobs:
         run: |
           cd $SOURCE_DIR
           echo "📦 关键包配置状态:"
-          grep -E "CONFIG_PACKAGE_(qmodem|luci-app-qmodem|adguardhome|mihomo)=" .config || true
+          grep -E "CONFIG_PACKAGE_(qmodem|luci-app-qmodem-next|adguardhome|mihomo)=" .config || true
 
       - name: Download & Compile
         run: |
